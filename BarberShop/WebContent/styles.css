@@ -1,0 +1,58 @@
+@charset "UTF-8";
+
+
+#loginCard{
+	width: 400px;
+}
+
+#homeCard{
+	width: 400px;
+}
+
+#aboutUscard{
+	width: 400px;
+}
+
+#newsletter{
+	width: 400px;
+}
+
+#viewCard{
+	width: 700px;
+}
+
+#infoTable{
+	width: 500px;
+}
+
+#detailsTable{
+	width: 300px;
+}
+
+#registerCard{
+	width: 400px;
+}
+
+#updateCard{
+	width: 700px;
+}
+
+#appointmentCard{
+	width: 400px;
+}
+
+#deleteCard{
+	width: 600px;
+}
+
+#adminCard{
+	width: 400px;
+}
+
+#admin_appointentsCard{
+	width: 700px;
+}
+
+#earningsCard{
+	width: 400px;
+}

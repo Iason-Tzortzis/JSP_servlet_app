@@ -3,24 +3,33 @@
 <%@ page import="com.sun.jersey.api.client.Client"%>
 <%@ page import="com.sun.jersey.api.client.ClientResponse"%>  
 <%@ page import="com.sun.jersey.api.client.WebResource" %>
+<%@ page import="org.json.JSONObject" %>
+<%@ page import="org.json.JSONArray" %>
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="ISO-8859-1">
-<title>Home</title>
+<title>Update Appointment</title>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
 <link rel="stylesheet" type="text/css" href="styles.css">
+
 </head>
 <body>
+
 <%
-//getting uuid and userID from cookies
+
 String uuid_value = "";
-String new_userID = "";
+String userID = "";
+String price = "";
+
+
+
+//Getting the uuid and userID from the cookies
+
 Cookie cookie = null;
 Cookie[] cookies = null;
 
-// Get an array of Cookies associated with the this domain
 cookies = request.getCookies();
 
 if( cookies != null ) {
@@ -31,34 +40,26 @@ if( cookies != null ) {
       if(x.equals("uuid")){
     	  uuid_value = cookie.getValue();
       }
+      if(x.equals("userID")){
+    	  userID = cookie.getValue();
+      }
    }
 } else {
    System.out.println("No cookies founds");
 }
 System.out.println(uuid_value);
+System.out.println(userID);
 
-//creating barbershop database
-	try{
-		Client client = Client.create();
-		WebResource webResource = client.resource("http://localhost:8080/BarberShop/rest/Create/barbershop");
-		ClientResponse myresponse = webResource.accept("text/plain").get(ClientResponse.class);
-		String output2 = myresponse.getEntity(String.class); 
-		System.out.println(output2);
-	
-		if(myresponse.getStatus() != 200){
-			throw new RuntimeException("failed: HTTP error code : " + myresponse.getStatus());
-		}
-	} catch(Exception e){
-			e.printStackTrace();
-		}
+int intuserID = Integer. parseInt(userID);
+
 //checking if user logged in and if not redirecting to login page
 try{
 	Client client = Client.create();
 	WebResource webResource = client.resource("http://localhost:8080/BarberShop/rest/CheckIfLoggedIn/uuid_check/"+uuid_value);
 	ClientResponse myresponse = webResource.accept("text/plain").get(ClientResponse.class);
-	String output = myresponse.getEntity(String.class); 
-	System.out.println(output);
-	if(output.equals("Fail") || uuid_value == ""){
+	String output1 = myresponse.getEntity(String.class); 
+	System.out.println(output1);
+	if(output1.equals("Fail") || uuid_value == ""){
 		String redirectURL = "http://localhost:8080/BarberShop/Login.jsp";
 	    response.sendRedirect(redirectURL);
 	}
@@ -72,30 +73,12 @@ try{
 
 try{
 	Client client = Client.create();
-	WebResource webResource = client.resource("http://localhost:8080/BarberShop/rest/GetuserID/get_userID/"+uuid_value);
-	ClientResponse myresponse = webResource.accept("text/plain").get(ClientResponse.class);
-	String output = myresponse.getEntity(String.class); 
-	System.out.println(output);
-	Cookie cookie1 = new Cookie("userID",output);
-	cookie1.setMaxAge(60*60*24);
-	response.addCookie(cookie1);
-	new_userID = output;
-
-	if(myresponse.getStatus() != 200){
-		throw new RuntimeException("failed: HTTP error code : " + myresponse.getStatus());
-	}
-} catch(Exception e){
-		e.printStackTrace();
-	}
-int intuserID = Integer. parseInt(new_userID);
-try{
-	Client client = Client.create();
-	WebResource webResource = client.resource("http://localhost:8080/BarberShop/rest/CheckRole/checking_role/"+new_userID);
+	WebResource webResource = client.resource("http://localhost:8080/BarberShop/rest/CheckRole/checking_role/"+intuserID);
 	ClientResponse myresponse = webResource.accept("text/plain").get(ClientResponse.class);
 	String output = myresponse.getEntity(String.class); 
 	System.out.println(output);
 	if(output.equals("user") != true){
-		String redirectURL = "http://localhost:8080/BarberShop/adminHome.jsp";
+		String redirectURL = "http://localhost:8080/BarberShop/Login.jsp";
 	    response.sendRedirect(redirectURL);
 	}
 
@@ -105,14 +88,20 @@ try{
 } catch(Exception e){
 		e.printStackTrace();
 	}
-
-//if user submits info checking if user exists 
-
-if(request.getParameter("logout") != null){
-	
+//checking if submitting info add appointment
+if(request.getParameter("btn") != null){
+	int appointmentID = Integer.parseInt(request.getParameter("appointmentID"));
+	String date = new String(request.getParameter("Date"));
+	String time = new String(request.getParameter("time"));
+	String haircut = request.getParameter("haircut");
+	if(haircut.equals("normal") != true){
+		 price = String.valueOf(15);
+	}else{
+		 price = String.valueOf(9);
+	}
 	try{
 		Client client = Client.create();
-		WebResource webResource = client.resource("http://localhost:8080/BarberShop/rest/LogoutUser/logout/"+uuid_value);
+		WebResource webResource = client.resource("http://localhost:8080/BarberShop/rest/Updateappointment/update_appointment/"+date+"/"+haircut+"/"+time+"/"+intuserID+"/"+price+"/"+appointmentID);
 		ClientResponse myresponse = webResource.accept("text/plain").get(ClientResponse.class);
 
 		if(myresponse.getStatus() != 200){
@@ -120,38 +109,52 @@ if(request.getParameter("logout") != null){
 		}
 		String output = myresponse.getEntity(String.class); 
 		System.out.println(output);
-		String redirectURL = "http://localhost:8080/BarberShop/Login.jsp";
-	    response.sendRedirect(redirectURL);
-				
 	} catch(Exception e){
 			e.printStackTrace();
 		}
 	}
 
-
-
-
 %>
 <div class="container-fluid">
-	<div class="card mx-auto mt-5" id="homeCard">
+	<div class="card mx-auto mt-5" id="updateCard">
    		<div class="card-body">
-				<h3 class="card-tile text-center mb-3">Welcome to our barbershop</h3>
-				<div class="text-center mb-3">
-				<h4>All available routes</h4><br>
-				<a href="/BarberShop/info.jsp">View more information</a><br><br>
-				<a href="/BarberShop/Newsletter.jsp">Subscribe to our newsletter</a><br><br>
-				<a href="/BarberShop/appointment.jsp">Book an appointment</a><br><br>
-				<a href="/BarberShop/view_appointments.jsp">View my appointments</a><br><br>
-				<a href="/BarberShop/updateAppointment.jsp">Update my appointment</a><br><br>
-				<a href="/BarberShop/delete_appointment.jsp">Delete my appointment</a><br><br>
+   		<h3 class="card-title text-center">Update appointment based on appointmentID</h3>
+			<form method="POST">
+			<label for="appointmentID" class="form-label">Enter the appointmentID</label>
+			<input type="text" name="appointmentID" value="" placeholder="appointmentID" class="form-control" id="appointmentID" required><br><br>
+			<label for="date" class="form-label">Enter the date</label>
+			<input type="text" name="Date" value="" placeholder="DD.MM.YYYY" id="date" class="form-control" required><br><br>
+			<label for="haircut">Choose type of haircut:</label>
+			
+			<select class="form-select" name="haircut" id="haircut">
+				  <option value="normal">normal</option>
+				  <option value="extreme">extreme</option>
+				</select><br><br>
 				
+				<label for="time">Choose a time:</label>
 				
-			<form method="POST" class="mt-2">
-				<button type="submit" name="logout" value="logout" class="btn btn-primary">Logout</button>
+				<select class="form-select" aria-label="8.00" name="time" id="time">
+				  <option value="08.00">8.00</option>
+				  <option value="09.00">9.00</option>
+				  <option value="10.00">10.00</option>
+				  <option value="11.00">11.00</option>
+				  <option value="12.00">12.00</option>
+				  <option value="13.00">13.00</option>
+				  <option value="14.00">14.00</option>
+				  <option value="15.00">15.00</option>
+				</select><br>
+				<button type="submit" name="btn" value="Submit" class="btn btn-primary">Submit</button>
+				
+			
 			</form>
+			<div class="text-center mt-4">
+			<a class="btn btn-primary" href="/BarberShop/home.jsp" role="button">Back to Home Page</a><br><br>
 			</div>
 		</div>
 	</div>
 </div>
+
+
+
 </body>
 </html>
